@@ -14,7 +14,7 @@ project ("ulog_sqlite")
 
 include_directories("src")
 
-set(SOURCES "src/test_ulog_sqlite.c")
+set(SOURCES "test_ulog_sqlite.c")
 set(SOURCES ${SOURCES} "src/ulog_sqlite.c")
 set(SOURCES ${SOURCES} "src/ulog_sqlite.h")
 

@@ -40,99 +40,99 @@
 //int fd;
 FILE *fp;
 
-// int32_t read_fn(struct uls_write_context *ctx, void *buf, uint32_t pos, size_t len) {
+// int32_t read_fn(struct dblog_write_context *ctx, void *buf, uint32_t pos, size_t len) {
 //   if (lseek(fd, pos, SEEK_SET) == -1) {
 //     ctx->err_no = errno;
-//     return ULS_RES_SEEK_ERR;
+//     return DBLOG_RES_SEEK_ERR;
 //   }
 //   ssize_t ret = read(fd, buf, len);
 //   if (ret == -1) {
 //     ctx->err_no = errno;
-//     return ULS_RES_READ_ERR;
+//     return DBLOG_RES_READ_ERR;
 //   }
 //   return ret;
 // }
 
-// int32_t read_fn_rctx(struct uls_read_context *ctx, void *buf, uint32_t pos, size_t len) {
+// int32_t read_fn_rctx(struct dblog_read_context *ctx, void *buf, uint32_t pos, size_t len) {
 //   if (lseek(fd, pos, SEEK_SET) == -1)
-//     return ULS_RES_SEEK_ERR;
+//     return DBLOG_RES_SEEK_ERR;
 //   ssize_t ret = read(fd, buf, len);
 //   if (ret == -1)
-//     return ULS_RES_READ_ERR;
+//     return DBLOG_RES_READ_ERR;
 //   return ret;
 // }
 
-// int32_t write_fn(struct uls_write_context *ctx, void *buf, uint32_t pos, size_t len) {
+// int32_t write_fn(struct dblog_write_context *ctx, void *buf, uint32_t pos, size_t len) {
 //   if (lseek(fd, pos, SEEK_SET) == -1) {
 //     ctx->err_no = errno;
-//     return ULS_RES_SEEK_ERR;
+//     return DBLOG_RES_SEEK_ERR;
 //   }
 //   ssize_t ret = write(fd, buf, len);
 //   if (ret == -1) {
 //     ctx->err_no = errno;
-//     return ULS_RES_WRITE_ERR;
+//     return DBLOG_RES_WRITE_ERR;
 //   }
 //   return ret;
 // }
 
-// int flush_fn(struct uls_write_context *ctx) {
+// int flush_fn(struct dblog_write_context *ctx) {
 //   int ret = fsync(fd);
 //   if (ret == -1) {
 //     ctx->err_no = errno;
-//     return ULS_RES_FLUSH_ERR;
+//     return DBLOG_RES_FLUSH_ERR;
 //   }
-//   return ULS_RES_OK;
+//   return DBLOG_RES_OK;
 // }
 
-int32_t read_fn(struct uls_write_context *ctx, void *buf, uint32_t pos, size_t len) {
+int32_t read_fn(struct dblog_write_context *ctx, void *buf, uint32_t pos, size_t len) {
   if (fseek(fp, pos, SEEK_SET)) {
     ctx->err_no = ferror(fp);
-    return ULS_RES_SEEK_ERR;
+    return DBLOG_RES_SEEK_ERR;
   }
   size_t ret = fread(buf, 1, len, fp);
   if (ret != len) {
     ctx->err_no = ferror(fp);
-    return ULS_RES_READ_ERR;
+    return DBLOG_RES_READ_ERR;
   }
   return ret;
 }
 
-int32_t read_fn_rctx(struct uls_read_context *ctx, void *buf, uint32_t pos, size_t len) {
+int32_t read_fn_rctx(struct dblog_read_context *ctx, void *buf, uint32_t pos, size_t len) {
   if (fseek(fp, pos, SEEK_SET))
-    return ULS_RES_SEEK_ERR;
+    return DBLOG_RES_SEEK_ERR;
   size_t ret = fread(buf, 1, len, fp);
   if (ret != len)
-    return ULS_RES_READ_ERR;
+    return DBLOG_RES_READ_ERR;
   return ret;
 }
 
-int32_t write_fn(struct uls_write_context *ctx, void *buf, uint32_t pos, size_t len) {
+int32_t write_fn(struct dblog_write_context *ctx, void *buf, uint32_t pos, size_t len) {
   if (fseek(fp, pos, SEEK_SET)) {
     ctx->err_no = ferror(fp);
-    return ULS_RES_SEEK_ERR;
+    return DBLOG_RES_SEEK_ERR;
   }
   size_t ret = fwrite(buf, 1, len, fp);
   if (ret != len) {
     ctx->err_no = ferror(fp);
-    return ULS_RES_WRITE_ERR;
+    return DBLOG_RES_WRITE_ERR;
   }
   return ret;
 }
 
-int flush_fn(struct uls_write_context *ctx) {
+int flush_fn(struct dblog_write_context *ctx) {
   int ret = fflush(fp);
   if (ret) {
     ctx->err_no = ferror(fp);
-    return ULS_RES_FLUSH_ERR;
+    return DBLOG_RES_FLUSH_ERR;
   }
-  return ULS_RES_OK;
+  return DBLOG_RES_OK;
 }
 
 int test_multilevel(char *filename) {
 
   int32_t page_size = 65536;
   byte buf[page_size];
-  struct uls_write_context ctx;
+  struct dblog_write_context ctx;
   ctx.buf = buf;
   ctx.col_count = 5;
   ctx.page_size_exp = 16;
@@ -152,14 +152,14 @@ int test_multilevel(char *filename) {
 
   struct tm *t;
   struct timeval tv;
-  uls_write_init_with_script(&ctx, "tbl_test_log",
+  dblog_write_init_with_script(&ctx, "test_log",
    "CREATE TABLE test_log (date_time TEXT, int_seq INTEGER, float_seq REAL, float_rand REAL, text_rand TEXT)");
 
   int32_t ival;
   double d1, d2;
   char txt[24];
   char txt1[11];
-  uint8_t types[] = {ULS_TYPE_TEXT, ULS_TYPE_INT, ULS_TYPE_REAL, ULS_TYPE_REAL, ULS_TYPE_TEXT};
+  uint8_t types[] = {DBLOG_TYPE_TEXT, DBLOG_TYPE_INT, DBLOG_TYPE_REAL, DBLOG_TYPE_REAL, DBLOG_TYPE_TEXT};
   void *values[] = {txt, &ival, &d1, &d2, txt1};
   uint16_t lengths[] = {23, sizeof(ival), sizeof(d1), sizeof(d2), 0};
 
@@ -201,9 +201,9 @@ int test_multilevel(char *filename) {
     lengths[4] = txt_len;
     while (txt_len--)
       txt1[txt_len] = 'a' + (char)(rand() % 26);
-    uls_append_row_with_values(&ctx, types, (const void **) values, lengths);
+    dblog_append_row_with_values(&ctx, types, (const void **) values, lengths);
   }
-  if (uls_finalize(&ctx)) {
+  if (dblog_finalize(&ctx)) {
     printf("Error during finalize\n");
     fclose(fp);
     return -6;
@@ -218,7 +218,7 @@ int test_multilevel(char *filename) {
 int test_basic(char *filename) {
 
   byte buf[512];
-  struct uls_write_context ctx;
+  struct dblog_write_context ctx;
   ctx.buf = buf;
   ctx.col_count = 5;
   ctx.page_size_exp = 9;
@@ -236,19 +236,19 @@ int test_basic(char *filename) {
     return -1;
   }
 
-  uls_write_init(&ctx);
-  uls_set_col_val(&ctx, 0, ULS_TYPE_TEXT, "Hello", 5);
-  uls_set_col_val(&ctx, 1, ULS_TYPE_TEXT, "World", 5);
-  uls_set_col_val(&ctx, 2, ULS_TYPE_TEXT, "How", 3);
-  uls_set_col_val(&ctx, 3, ULS_TYPE_TEXT, "Are", 3);
-  uls_set_col_val(&ctx, 4, ULS_TYPE_TEXT, "You", 3);
-  uls_append_empty_row(&ctx);
-  uls_set_col_val(&ctx, 0, ULS_TYPE_TEXT, "I", 1);
-  uls_set_col_val(&ctx, 1, ULS_TYPE_TEXT, "am", 2);
-  uls_set_col_val(&ctx, 2, ULS_TYPE_TEXT, "fine", 4);
-  uls_set_col_val(&ctx, 3, ULS_TYPE_TEXT, "thank", 5);
-  uls_set_col_val(&ctx, 4, ULS_TYPE_TEXT, "you", 3);
-  if (uls_finalize(&ctx)) {
+  dblog_write_init(&ctx);
+  dblog_set_col_val(&ctx, 0, DBLOG_TYPE_TEXT, "Hello", 5);
+  dblog_set_col_val(&ctx, 1, DBLOG_TYPE_TEXT, "World", 5);
+  dblog_set_col_val(&ctx, 2, DBLOG_TYPE_TEXT, "How", 3);
+  dblog_set_col_val(&ctx, 3, DBLOG_TYPE_TEXT, "Are", 3);
+  dblog_set_col_val(&ctx, 4, DBLOG_TYPE_TEXT, "You", 3);
+  dblog_append_empty_row(&ctx);
+  dblog_set_col_val(&ctx, 0, DBLOG_TYPE_TEXT, "I", 1);
+  dblog_set_col_val(&ctx, 1, DBLOG_TYPE_TEXT, "am", 2);
+  dblog_set_col_val(&ctx, 2, DBLOG_TYPE_TEXT, "fine", 4);
+  dblog_set_col_val(&ctx, 3, DBLOG_TYPE_TEXT, "thank", 5);
+  dblog_set_col_val(&ctx, 4, DBLOG_TYPE_TEXT, "you", 3);
+  if (dblog_finalize(&ctx)) {
     printf("Error during finalize\n");
     return -6;
   }
@@ -288,34 +288,34 @@ byte validate_page_size(int32_t page_size) {
   return get_page_size_exp(page_size);
 }
 
-int add_col(struct uls_write_context *ctx, int col_idx, char *data, byte isInt, byte isReal) {
+int add_col(struct dblog_write_context *ctx, int col_idx, char *data, byte isInt, byte isReal) {
   if (isInt) {
     int64_t ival = atoll(data);
     if (ival >= -128 && ival <= 127) {
       int8_t i8val = (int8_t) ival;
-      return uls_set_col_val(ctx, col_idx, ULS_TYPE_INT, &i8val, 1);
+      return dblog_set_col_val(ctx, col_idx, DBLOG_TYPE_INT, &i8val, 1);
     } else
     if (ival >= -32768 && ival <= 32767) {
       int16_t i16val = (int16_t) ival;
-      return uls_set_col_val(ctx, col_idx, ULS_TYPE_INT, &i16val, 2);
+      return dblog_set_col_val(ctx, col_idx, DBLOG_TYPE_INT, &i16val, 2);
     } else
     if (ival >= -2147483648 && ival <= 2147483647) {
       int32_t i32val = (int32_t) ival;
-      return uls_set_col_val(ctx, col_idx, ULS_TYPE_INT, &i32val, 4);
+      return dblog_set_col_val(ctx, col_idx, DBLOG_TYPE_INT, &i32val, 4);
     } else {
-      return uls_set_col_val(ctx, col_idx, ULS_TYPE_INT, &ival, 8);
+      return dblog_set_col_val(ctx, col_idx, DBLOG_TYPE_INT, &ival, 8);
     }
   } else
   if (isReal) {
     //float dval = atof(data);
     double dval = atof(data);
-    return uls_set_col_val(ctx, col_idx, ULS_TYPE_REAL, &dval, sizeof(dval));
+    return dblog_set_col_val(ctx, col_idx, DBLOG_TYPE_REAL, &dval, sizeof(dval));
   }
-  return uls_set_col_val(ctx, col_idx, ULS_TYPE_TEXT, data, strlen(data));
+  return dblog_set_col_val(ctx, col_idx, DBLOG_TYPE_TEXT, data, strlen(data));
 }
 
-int append_records(int argc, char *argv[], struct uls_write_context *ctx) {
-  if (uls_append_empty_row(ctx)) {
+int append_records(int argc, char *argv[], struct dblog_write_context *ctx) {
+  if (dblog_append_empty_row(ctx)) {
     printf("Error during add row\n");
     return -5;
   }
@@ -356,13 +356,13 @@ int append_records(int argc, char *argv[], struct uls_write_context *ctx) {
       return -4;
     }
     if (i < argc - 1) {
-      if (uls_append_empty_row(ctx)) {
+      if (dblog_append_empty_row(ctx)) {
         printf("Error during add col\n");
         return -5;
       }
     }
   }
-  if (uls_finalize(ctx)) {
+  if (dblog_finalize(ctx)) {
     printf("Error during finalize\n");
     return -6;
   }
@@ -378,7 +378,7 @@ int create_db(int argc, char *argv[]) {
   }
   byte col_count = atoi(argv[4]);
   byte buf[page_size];
-  struct uls_write_context ctx;
+  struct dblog_write_context ctx;
   ctx.buf = buf;
   ctx.col_count = col_count;
   ctx.page_size_exp = page_size_exp;
@@ -399,7 +399,7 @@ int create_db(int argc, char *argv[]) {
     fclose(fp);
     return -1;
   }
-  if (uls_write_init(&ctx)) {
+  if (dblog_write_init(&ctx)) {
     printf("Error during init\n");
     fclose(fp);
     return -3;
@@ -418,7 +418,7 @@ int append_db(int argc, char *argv[]) {
   }
   byte col_count = atoi(argv[4]);
   byte buf[page_size];
-  struct uls_write_context ctx;
+  struct dblog_write_context ctx;
   ctx.buf = buf;
   ctx.col_count = col_count;
   ctx.page_size_exp = page_size_exp;
@@ -438,7 +438,7 @@ int append_db(int argc, char *argv[]) {
     fclose(fp);
     return -1;
   }
-  if (uls_init_for_append(&ctx)) {
+  if (dblog_init_for_append(&ctx)) {
     printf("Error during init\n");
     fclose(fp);
     return -3;
@@ -450,7 +450,7 @@ int append_db(int argc, char *argv[]) {
 
 int recover_db(int argc, char *argv[]) {
   byte initial_buf[72];
-  struct uls_write_context ctx;
+  struct dblog_write_context ctx;
   ctx.buf = initial_buf;
   ctx.read_fn = read_fn;
   ctx.flush_fn = flush_fn;
@@ -465,7 +465,7 @@ int recover_db(int argc, char *argv[]) {
     perror ("Open Error:");
     return -1;
   }
-  int32_t page_size = uls_read_page_size(&ctx);
+  int32_t page_size = dblog_read_page_size(&ctx);
   if (page_size < 512) {
     printf("Error reading page size\n");
     fclose(fp);
@@ -473,7 +473,7 @@ int recover_db(int argc, char *argv[]) {
   }
   byte buf[page_size];
   ctx.buf = buf;
-  if (uls_recover(&ctx)) {
+  if (dblog_recover(&ctx)) {
     printf("Error during recover\n");
     fclose(fp);
     return -3;
@@ -515,13 +515,13 @@ double read_double(const byte *ptr) {
   return ret;
 }
 
-void display_row(struct uls_read_context ctx) {
-  int col_count = uls_cur_row_col_count(&ctx);
+void display_row(struct dblog_read_context ctx) {
+  int col_count = dblog_cur_row_col_count(&ctx);
   for (int i = 0; i < col_count; i++) {
     if (i)
       putchar('|');
     uint32_t col_type;
-    const byte *col_val = (const byte *) uls_read_col_val(&ctx, i, &col_type);
+    const byte *col_val = (const byte *) dblog_read_col_val(&ctx, i, &col_type);
     switch (col_type) {
       case 0:
         printf("null");
@@ -551,7 +551,7 @@ void display_row(struct uls_read_context ctx) {
         break;
       }
       default: {
-        uint32_t col_len = uls_derive_data_len(col_type);
+        uint32_t col_len = dblog_derive_data_len(col_type);
         for (int j = 0; j < col_len; j++) {
           if (col_type % 2)
             putchar(col_val[j]);
@@ -589,15 +589,15 @@ int resolve_value(char *value, byte *out_val) {
   if (isInt) {
     int64_t ival = (int64_t) atoll(value);
     memcpy(out_val, &ival, sizeof(ival));
-    return ULS_TYPE_INT;
+    return DBLOG_TYPE_INT;
   } else
   if (isReal) {
     double dval = atof(value);
     memcpy(out_val, &dval, sizeof(dval));
-    return ULS_TYPE_REAL;
+    return DBLOG_TYPE_REAL;
   }
   memcpy(out_val, value, strlen(value));
-  return ULS_TYPE_TEXT;
+  return DBLOG_TYPE_TEXT;
 }
 
 int bin_srch_db(int argc, char *argv[]) {
@@ -607,7 +607,7 @@ int bin_srch_db(int argc, char *argv[]) {
     return -1;
   }
   byte buf[72];
-  struct uls_read_context ctx;
+  struct dblog_read_context ctx;
   ctx.buf = buf;
   ctx.read_fn = read_fn_rctx;
   //fd = open(argv[2], O_RDWR | O_SYNC, S_IRUSR | S_IWUSR);
@@ -620,7 +620,7 @@ int bin_srch_db(int argc, char *argv[]) {
     perror ("Open Error:");
     return -1;
   }
-  if (uls_read_init(&ctx)) {
+  if (dblog_read_init(&ctx)) {
     printf("Error during init\n");
     fclose(fp);
     return -3;
@@ -629,9 +629,9 @@ int bin_srch_db(int argc, char *argv[]) {
   ctx.buf = page_buf;
   int col_idx = atol(argv[3]);
   int val_type = resolve_value(argv[4], buf);
-  if (val_type == ULS_TYPE_INT || val_type == ULS_TYPE_REAL)
+  if (val_type == DBLOG_TYPE_INT || val_type == DBLOG_TYPE_REAL)
     len = 8;
-  if (uls_bin_srch_row_by_val(&ctx, col_idx, val_type, 
+  if (dblog_bin_srch_row_by_val(&ctx, col_idx, val_type, 
         buf, len, col_idx == -1 ? 1 : 0)) {
     printf("Not Found\n");
   } else {
@@ -644,7 +644,7 @@ int bin_srch_db(int argc, char *argv[]) {
 
 int read_db(int argc, char *argv[]) {
   byte buf[72];
-  struct uls_read_context ctx;
+  struct dblog_read_context ctx;
   ctx.buf = buf;
   ctx.read_fn = read_fn_rctx;
   //fd = open(argv[2], O_RDWR | O_SYNC, S_IRUSR | S_IWUSR);
@@ -657,7 +657,7 @@ int read_db(int argc, char *argv[]) {
     perror ("Open Error:");
     return -1;
   }
-  if (uls_read_init(&ctx)) {
+  if (dblog_read_init(&ctx)) {
     printf("Error during init\n");
     fclose(fp);
     return -3;
@@ -665,7 +665,7 @@ int read_db(int argc, char *argv[]) {
   byte page_buf[1 << (ctx.page_size_exp == 1 ? 16 : ctx.page_size_exp)];
   ctx.buf = page_buf;
   uint32_t rowid = atol(argv[3]);
-  if (uls_srch_row_by_id(&ctx, rowid)) {
+  if (dblog_srch_row_by_id(&ctx, rowid)) {
     printf("Not Found\n");
   } else {
     display_row(ctx);

@@ -26,7 +26,7 @@
 
 #ifndef ARDUINO
 
-#include "ulog_sqlite.h"
+#include "src/ulog_sqlite.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -128,14 +128,64 @@ int flush_fn(struct dblog_write_context *ctx) {
   return DBLOG_RES_OK;
 }
 
+int test_1byte_row(char *filename) {
+
+  int32_t page_size = 512;
+  byte buf[page_size];
+  struct dblog_write_context ctx;
+  ctx.buf = buf;
+  ctx.col_count = 1;
+  ctx.page_size_exp = 9;
+  ctx.max_pages_exp = 0;
+  ctx.page_resv_bytes = 0;
+  ctx.read_fn = read_fn;
+  ctx.flush_fn = flush_fn;
+  ctx.write_fn = write_fn;
+
+  unlink(filename);
+  //fd = open(filename, O_CREAT | O_EXCL | O_TRUNC | O_RDWR | O_SYNC, S_IRUSR | S_IWUSR);
+  fp = fopen(filename, "w+b");
+  if (fp == NULL) {
+    perror ("Open Error:");
+    return -1;
+  }
+
+  struct tm *t;
+  struct timeval tv;
+  dblog_write_init(&ctx);
+
+  int8_t ival;
+  uint8_t types[] = {DBLOG_TYPE_INT};
+  void *values[] = {&ival};
+  uint16_t lengths[] = {1};
+
+  int32_t max_rows = 1000000;
+  for (int32_t i = 0; i < max_rows; i++) {
+    ival = (int8_t) i % 255 / 2;
+    dblog_append_row_with_values(&ctx, types, (const void **) values, lengths);
+    if (i % 2)
+      dblog_set_col_val(&ctx, 0, DBLOG_TYPE_INT, NULL, 1);
+  }
+  if (dblog_finalize(&ctx)) {
+    printf("Error during finalize\n");
+    fclose(fp);
+    return -6;
+  }
+
+  fclose(fp);
+
+  return 0;
+
+}
+
 int test_multilevel(char *filename) {
 
-  int32_t page_size = 65536;
+  int32_t page_size = 512;
   byte buf[page_size];
   struct dblog_write_context ctx;
   ctx.buf = buf;
   ctx.col_count = 5;
-  ctx.page_size_exp = 16;
+  ctx.page_size_exp = 9;
   ctx.max_pages_exp = 0;
   ctx.page_resv_bytes = 0;
   ctx.read_fn = read_fn;
@@ -522,6 +572,10 @@ void display_row(struct dblog_read_context ctx) {
       putchar('|');
     uint32_t col_type;
     const byte *col_val = (const byte *) dblog_read_col_val(&ctx, i, &col_type);
+    if (!col_val) {
+      printf("Error reading value\n");
+      return;
+    }
     switch (col_type) {
       case 0:
         printf("null");
@@ -695,6 +749,7 @@ int main(int argc, char *argv[]) {
   if (argc == 2 && strcmp(argv[1], "-n") == 0) {
     test_basic("hello.db");
     test_multilevel("ml.db");
+    test_1byte_row("1byte_row.db");
   } else
     print_usage();
 

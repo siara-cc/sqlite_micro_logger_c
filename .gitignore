@@ -1,11 +1,13 @@
 *.o
 *.obj
+*.dSYM
 Makefile
 .DS_Store
 .vscode
 .vs
 *.bundle
 *.so
+*.gz
 *.def
 *.exe
 *.db

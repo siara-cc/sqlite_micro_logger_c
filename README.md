@@ -28,3 +28,10 @@ During finalize:
 - Length of table script limited to (`page size` - 100) bytes
 - Index creation and lookup not possible (as of now)
 
+# TODO
+
+- header checksum always checked
+- no. of records always less than last pos
+- optional to write and check page checksum
+- record length should not exceed remaining page size
+- column length should not exceed remaining record size

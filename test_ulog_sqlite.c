@@ -482,7 +482,7 @@ int append_db(int argc, char *argv[]) {
   //  perror("Error");
   //  return -2;
   //}
-  fp = fopen(argv[2], "w+b");
+  fp = fopen(argv[2], "r+b");
   if (fp == NULL) {
     perror ("Open Error:");
     fclose(fp);

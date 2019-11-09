@@ -9,7 +9,7 @@
 
   https://github.com/siara-in/sqlite_micro_logger
 
-  Copyright 2019 Arundale Ramanathan, Siara Logics (in)
+  Copyright @ 2019 Arundale Ramanathan, Siara Logics (cc)
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.

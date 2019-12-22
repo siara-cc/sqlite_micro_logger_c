@@ -16,10 +16,11 @@ Sqlite µLogger is a Fast and Lean database logger that can log data into Sqlite
 
 - Logging sensor data on Microcontrollers with RAM >= 2 kilobytes
 - Fast database logging on VMs and Containers having short TTL (turnaround time and memory footprint are important)
+- Recording data received from `IoT farms`.
 
 # Performance
 
-This library is found to be faster than the official `sqlite` API functions for logging data, even using Prepared Statements.  However, this was just random testing and no formal test beds or benchmarks are available.  Also, it is to be kept in mind that the scope of this library is limited and it supports only a fraction of what the office library supports.
+This library is found to be faster than the official `sqlite` API functions for logging data, even using Prepared Statements.  However, this was just random testing and no formal test beds or benchmarks are available.  Also, it is to be kept in mind that the speed is because `scope` of this library is limited and it supports only a fraction of what the official library supports.
 
 For reading, the official `sqlite` functions would be faster and less IO intensive as this library does not do any caching.  This library is targetted to run on Microcontrollers having just 2kb RAM.  Even then, it can also be used on Desktops and VMs (such as Docker and Kubernates) where there are constraints on RAM availability.
 
@@ -261,6 +262,8 @@ However, the database created can be opened using the `sqlite3` command line uti
 - Allow modification of records
 - Rolling logs
 - Show how this library can be used in a multi-core, multi-threaded environment
+- Add encryption support
+- Get it working for esp-idf
 
 # Related Projects
 

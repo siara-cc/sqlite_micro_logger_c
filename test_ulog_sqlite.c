@@ -324,11 +324,13 @@ void print_usage() {
   printf("        with records in CSV format (page_size and col_count have to match)\n\n");
   printf("test_ulog_sqlite -v <db_name.db>\n");
   printf("    Attempts to recover <db_name.db> if not finalized\n\n");
-  printf("test_ulog_sqlite -r <db_name.db> <rowid>\n");
-  printf("    Searches <db_name.db> for given row_id and prints result\n\n");
-  printf("test_ulog_sqlite -b <db_name.db> <col_idx> <value>\n");
+  printf("test_ulog_sqlite -r <db_name.db> <rowid> [upd_col_idx] [upd_value]\n");
+  printf("    Searches <db_name.db> for given row_id and prints result.\n");
+  printf("        Optionally updates value if upd_col_idx and upd_value are given\n\n");
+  printf("test_ulog_sqlite -b <db_name.db> <col_idx> <value> [upd_col_idx] [upd_value]\n");
   printf("    Searches <db_name.db> and column for given value using\n");
-  printf("        binary search and prints result. col_idx starts from 0.\n\n");
+  printf("        binary search and prints result. col_idx starts from 0.\n");
+  printf("        Optionally updates value if upd_col_idx and upd_value are given\n\n");
   printf("test_ulog_sqlite -n\n");
   printf("    Runs pre-defined tests and creates databases (verified manually)\n\n");
 }
@@ -690,6 +692,12 @@ int bin_srch_db(int argc, char *argv[]) {
     printf("Not Found\n");
   } else {
     display_row(ctx);
+    if (argc == 7) {
+      int upd_col_idx = atol(argv[5]);
+      int upd_val_type = resolve_value(argv[6], buf);
+      if (dblog_upd_col_val(&ctx, upd_col_idx, buf) == DBLOG_RES_OK)
+        dblog_write_cur_page(&ctx, write_fn);
+    }
   }
   putchar('\n');
   fclose(fp);
@@ -723,6 +731,12 @@ int read_db(int argc, char *argv[]) {
     printf("Not Found\n");
   } else {
     display_row(ctx);
+    if (argc == 6) {
+      int upd_col_idx = atol(argv[4]);
+      int upd_val_type = resolve_value(argv[5], buf);
+      if (dblog_upd_col_val(&ctx, upd_col_idx, buf) == DBLOG_RES_OK)
+        dblog_write_cur_page(&ctx, write_fn);
+    }
   }
   putchar('\n');
   fclose(fp);
@@ -740,10 +754,10 @@ int main(int argc, char *argv[]) {
   if (argc == 3 && strcmp(argv[1], "-v") == 0) {
     recover_db(argc, argv);
   } else
-  if (argc == 4 && strcmp(argv[1], "-r") == 0) {
+  if (argc > 3 && strcmp(argv[1], "-r") == 0) {
     read_db(argc, argv);
   } else
-  if (argc == 5 && strcmp(argv[1], "-b") == 0) {
+  if (argc > 4 && strcmp(argv[1], "-b") == 0) {
     bin_srch_db(argc, argv);
   } else
   if (argc == 2 && strcmp(argv[1], "-n") == 0) {

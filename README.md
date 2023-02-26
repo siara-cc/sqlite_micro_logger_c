@@ -66,12 +66,14 @@ test_ulog_sqlite -a <db_name.db> <page_size> <col_count> <csv_1> ... <csv_n>
 test_ulog_sqlite -v <db_name.db>
     Attempts to recover <db_name.db> if not finalized
 
-test_ulog_sqlite -r <db_name.db> <rowid>
-    Searches <db_name.db> for given row_id and prints result
+test_ulog_sqlite -r <db_name.db> <rowid> [upd_col_idx] [upd_value]
+    Searches <db_name.db> for given row_id and prints result.
+        Optionally updates value if upd_col_idx and upd_value are given
 
-test_ulog_sqlite -b <db_name.db> <col_idx> <value>
+test_ulog_sqlite -b <db_name.db> <col_idx> <value> [upd_col_idx] [upd_value]
     Searches <db_name.db> and column for given value using
         binary search and prints result. col_idx starts from 0.
+        Optionally updates value if upd_col_idx and upd_value are given
 
 test_ulog_sqlite -n
     Runs pre-defined tests and creates databases (verified manually)
@@ -100,6 +102,8 @@ struct dblog_write_context {
   byte state;
   int err_no;
 };
+
+typedef int32_t (*write_fn_def)(struct dblog_write_context *ctx, void *buf, uint32_t pos, size_t len);
 
 // Initializes database - writes first page
 // and makes it ready for writing data
@@ -227,6 +231,15 @@ int dblog_srch_row_by_id(struct dblog_read_context *rctx, uint32_t rowid);
 // is_rowid = 1 is used to do Binary Search by RowId
 int dblog_bin_srch_row_by_val(struct dblog_read_context *rctx, int col_idx,
       int val_type, void *val, uint16_t len, byte is_rowid);
+
+// Updates value of column at current position
+// For text and blob columns, pass the type to dblog_derive_data_len()
+// to get the actual length
+int dblog_upd_col_val(struct dblog_read_context *rctx, int col_idx, const void *val);
+
+// Writes the current page to disk
+// Typically called after updating values using dblog_upd_col_val()
+int dblog_write_cur_page(struct dblog_read_context *rctx, write_fn_def write_fn);
 ```
 
 The read API can only be used with databases created using this library.

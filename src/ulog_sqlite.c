@@ -1279,7 +1279,7 @@ uint32_t read_rowid_at(struct dblog_read_context *rctx, uint32_t rec_pos) {
 
 int read_root_page_no(struct dblog_read_context *rctx, int32_t page_size) {
   if (rctx->root_page)
-    return rctx->root_page;
+    return DBLOG_RES_OK; // do nothing, we already have root_page
   int res = read_bytes_rctx(rctx, rctx->buf, 0, page_size);
   if (res)
     return res;

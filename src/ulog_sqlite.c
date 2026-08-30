@@ -347,6 +347,10 @@ int check_sums(byte *buf, int32_t page_size, int calc_or_check) {
     while (i < end) // Header checksum
       chk_sum += buf[i++];
     uint16_t last_pos = read_uint16(buf + 5);
+    if (last_pos < 3)
+    {
+      return DBLOG_RES_OK; // DB is ok but it is just empty. Prevent underflows further
+    }
     i = last_pos;
     end = i + LEN_OF_REC_LEN;
     read_vint32(buf + end, &vlen);

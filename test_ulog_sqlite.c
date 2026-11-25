@@ -523,6 +523,7 @@ int recover_db(int argc, char *argv[]) {
     fclose(fp);
     return -2;
   }
+  ctx.page_resv_bytes = 0;
   byte buf[page_size];
   ctx.buf = buf;
   if (dblog_recover(&ctx)) {
